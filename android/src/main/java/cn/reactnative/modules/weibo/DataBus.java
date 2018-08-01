@@ -28,7 +28,7 @@ public class DataBus {
     }
 
     public ObserveWrapper with(String key) {
-        return with(key,Object.class);
+        return with(key, Object.class);
     }
 
     private static class SingletonHolder {
@@ -39,13 +39,13 @@ public class DataBus {
         return DataBus.SingletonHolder.DEFAULT_BUS;
     }
 
-    public <T> ObserveWrapper<T> with(String key, Class<T> type){
+    public <T> ObserveWrapper<T> with(String key, Class<T> type) {
         ObserveWrapper<T> observeWrapper = null;
         if (!bus.containsKey(key)) {
             PublishSubject<T> subject = PublishSubject.create();
             observeWrapper = new ObserveWrapper(subject);
             bus.put(key, observeWrapper);
-        }else {
+        } else {
             observeWrapper = bus.get(key);
         }
         return observeWrapper;
@@ -59,20 +59,22 @@ public class DataBus {
             this.observable = observable;
         }
 
-        public void post(T t){
+        public void post(T t) {
             observable.onNext(t);
         }
 
-        public void observe(final OnBusResult<T> onBusResult){
-           observable.subscribeOn(Schedulers.immediate())
+        public void observe(final OnBusResult<T> onBusResult) {
+            observable.subscribeOn(Schedulers.immediate())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(new Subscriber<T>() {
                         @Override
                         public void onCompleted() {
                         }
+
                         @Override
                         public void onError(Throwable e) {
                         }
+
                         @Override
                         public void onNext(T t) {
                             onBusResult.onResult(t);
@@ -80,20 +82,22 @@ public class DataBus {
                     });
         }
 
-        protected void release(){
-            if(observable != null){
+        protected void release() {
+            if (observable != null) {
                 observable.onCompleted();
                 observable = null;
             }
         }
     }
 
-    public void remove(String key){
+    public void remove(String key) {
         ObserveWrapper observeWrapper = bus.remove(key);
-        observeWrapper.release();
+        if (observeWrapper != null) {
+            observeWrapper.release();
+        }
     }
 
-    public interface OnBusResult<T>{
+    public interface OnBusResult<T> {
         void onResult(T t);
     }
 
